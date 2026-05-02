@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Главная · VILINS Smeta{% endblock %}
+
+{% block content %}
+<section class="editorial">
+  {% if stats.total == 0 %}
+    {# zero-state: один редакционный экран без статистики и сайдбара #}
+    <p class="eyebrow mb-3">Здравствуйте, {{ user.full_name or user.email }}</p>
+    <div class="entrance-display mb-10">
+      <h1 class="display display-5xl">Создайте первую смету —</h1>
+      <h1 class="display display-5xl muted">остальное соберётся вокруг.</h1>
+    </div>
+    <p class="lede mb-12">
+      Загрузите запрос (xlsx, pdf, docx или текст) — система найдёт похожие позиции
+      в базе исторических КП ВИЛИНС, предложит цены с обоснованием и соберёт PDF. Каждая
+      подтверждённая смета пополняет базу прецедентов автоматически.
+    </p>
+    <div class="home-cta">
+      <a href="/estimates/new" class="btn btn-primary btn-lg">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Создать смету
+      </a>
+    </div>
+  {% else %}
+    <p class="eyebrow mb-3">Здравствуйте, {{ user.full_name or user.email }}</p>
+
+    <div class="entrance-display mb-10">
+      <h1 class="display display-5xl">
+        В {{ month_word }} —
+        <span class="num" style="font-family: var(--font-display); font-variant-numeric: tabular-nums;">{{ stats.month }}</span>
+        {{ stats.month | pluralize_ru("смета", "сметы", "смет") }}.
+      </h1>
+    </div>
+
+    <div class="home-cta mb-12">
+      <a href="/estimates/new" class="btn btn-primary btn-lg">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Новая смета
+      </a>
+      <a href="/estimates" class="btn btn-secondary btn-lg">Все сметы →</a>
+    </div>
+
+    <div class="stats-line mb-16">
+      <div>
+        <div class="stat__value">{{ stats.total }}</div>
+        <div class="stat__label">всего {{ stats.total | pluralize_ru("смета", "сметы", "смет") }}</div>
+      </div>
+      <div>
+        <div class="stat__value">{{ stats.in_progress }}</div>
+        <div class="stat__label">в работе</div>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <section>
+        <h2 class="eyebrow mb-4">Последние сметы</h2>
+        <div class="entry-list">
+          {% for inv in recent %}
+          <a href="/estimates/{{ inv.id }}" class="entry">
+            <span class="entry__title">
+              {{ inv.client_name or inv.object_name or "Без клиента" }}
+              <span class="muted text-xs"> · {{ inv.invoice_number }}</span>
+            </span>
+            <span class="entry__meta">{{ inv.created_at | date_short }}</span>
+            <span class="status-pill is-{{ inv.status }}">{{ inv.status | status_label }}</span>
+            <span class="entry__amount">{{ inv.total_amount | money_compact }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+
+      <aside class="home-aside">
+        <section>
+          <h2 class="eyebrow mb-4">Требует внимания</h2>
+          {% if in_review %}
+          <div class="entry-list">
+            {% for inv in in_review %}
+            <a href="/estimates/{{ inv.id }}" class="entry" style="grid-template-columns: 1fr auto;">
+              <span class="entry__title">{{ inv.client_name or inv.object_name or inv.invoice_number }}</span>
+              <span class="entry__amount">{{ inv.total_amount | money_compact }}</span>
+              <span class="entry__meta">{{ inv.created_at | relative }}</span>
+            </a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="muted text-sm">Все сметы доведены до конца.</p>
+          {% endif %}
+        </section>
+
+        <section>
+          <h2 class="eyebrow mb-4">Свежие прецеденты</h2>
+          {% if top_refs %}
+          <div class="entry-list">
+            {% for proj in top_refs %}
+            <div class="entry" style="grid-template-columns: 1fr auto;">
+              <span class="entry__title">{{ proj.project_name or "Без названия" }}</span>
+              <span class="entry__amount">{{ proj.total_amount | money_compact }}</span>
+              <span class="entry__meta">{{ proj.project_date | date_short }} · {{ proj.items_count }} поз.</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="muted text-sm">Пока нет прецедентов в базе.</p>
+          {% endif %}
+        </section>
+      </aside>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -65,7 +65,7 @@ async def adm_on_doc(message: Message, state: FSMContext, bot: Bot) -> None:
     preview = ""
     try:
         pr = await UniversalParser().parse(ParseSource(file_path=dest, file_format=fmt))
-        preview = f"Быстрый разбор: **{len(pr.items)}** строк (универсальный парсер).\n"
+        preview = f"Быстрый разбор: {len(pr.items)} строк (универсальный парсер).\n"
         for it in pr.items[:8]:
             preview += f"• {it.suggested_name[:80]}\n"
         if len(pr.items) > 8:

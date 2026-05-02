@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ inv.invoice_number }} · {{ inv.client_name or 'Без клиента' }}{% endblock %}
+
+{% block content %}
+<section class="estimate-detail">
+
+  <div class="flex items-baseline justify-between mb-3 flex-wrap gap-3">
+    <p class="eyebrow">
+      <a href="/estimates" class="muted no-underline">Сметы</a>
+      <span style="margin-inline: 6px;">/</span>
+      Смета <span class="mono">{{ inv.invoice_number }}</span>
+    </p>
+    <div class="flex items-center gap-3">
+      <span class="status-pill is-{{ inv.status }}">{{ inv.status | status_label }}</span>
+      <span class="muted text-sm">{{ inv.created_at | date_short }}</span>
+    </div>
+  </div>
+
+  <div class="mb-10">
+    <h1 class="display display-3xl mb-2">{{ inv.client_name or "Без клиента" }}</h1>
+    {% if inv.object_name %}
+    <p class="lede muted">{{ inv.object_name }}</p>
+    {% endif %}
+  </div>
+
+  <details class="mb-10" {% if not inv.client_name %}open{% endif %} style="border: 1px solid var(--line-default); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5);">
+    <summary class="eyebrow" style="cursor: pointer;">Реквизиты сметы</summary>
+    <form class="form-stack mt-6" hx-post="/estimates/{{ inv.id }}/meta" hx-swap="none" hx-trigger="change delay:400ms">
+      <div class="form-row">
+        <div class="field">
+          <label class="field-label" for="client_name">Клиент</label>
+          <input class="input" type="text" id="client_name" name="client_name" value="{{ inv.client_name or '' }}">
+        </div>
+        <div class="field">
+          <label class="field-label" for="contact_name">Контактное лицо</label>
+          <input class="input" type="text" id="contact_name" name="contact_name" value="{{ inv.contact_name or '' }}">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="object_name">Объект</label>
+        <input class="input" type="text" id="object_name" name="object_name" value="{{ inv.object_name or '' }}">
+      </div>
+      <p class="field-hint">Сохраняется автоматически при изменении.</p>
+    </form>
+  </details>
+
+  {% include "estimates/_table.html" %}
+</section>
+
+<script src="/static/js/estimate.js" defer></script>
+{% endblock %}

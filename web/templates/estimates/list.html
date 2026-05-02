@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Сметы · VILINS Smeta{% endblock %}
+
+{% block content %}
+<div class="workhorse">
+  <aside class="workhorse__sidebar workhorse__sidebar--collapsible">
+    <details class="workhorse__sidebar-details" open>
+      <summary class="workhorse__sidebar-summary">
+        <span>Фильтры и действия</span>
+        <span class="workhorse__sidebar-chevron" aria-hidden="true">›</span>
+      </summary>
+      <div class="side-section">
+        <p class="side-section__title">Фильтр</p>
+        <nav class="side-nav">
+          <a href="?scope=mine" {% if scope == "mine" %}aria-current="page"{% endif %}>Мои сметы</a>
+          <a href="?scope=all" {% if scope == "all" %}aria-current="page"{% endif %}>Все сметы</a>
+        </nav>
+      </div>
+
+      <div class="side-section">
+        <p class="side-section__title">Статус</p>
+        <nav class="side-nav">
+          <a href="?scope={{ scope }}" {% if not status %}aria-current="page"{% endif %}>Все</a>
+          <a href="?scope={{ scope }}&status=estimating" {% if status == 'estimating' %}aria-current="page"{% endif %}>В работе</a>
+          <a href="?scope={{ scope }}&status=generated" {% if status == 'generated' %}aria-current="page"{% endif %}>Готовые</a>
+          <a href="?scope={{ scope }}&status=draft" {% if status == 'draft' %}aria-current="page"{% endif %}>Черновики</a>
+        </nav>
+      </div>
+
+      <div class="side-section">
+        <p class="side-section__title">Действия</p>
+        <a href="/estimates/new" class="btn btn-primary btn-sm w-full" style="justify-content: flex-start;">
+          Новая смета
+        </a>
+      </div>
+    </details>
+  </aside>
+
+  <section>
+    <div class="list-head mb-8">
+      <div>
+        <p class="eyebrow mb-2">Сметы</p>
+        <h1 class="display display-3xl">{{ total }} {{ total | pluralize_ru("запись", "записи", "записей") }}</h1>
+      </div>
+
+      <form method="get" action="/estimates" class="list-search" role="search">
+        <input type="hidden" name="scope" value="{{ scope }}">
+        {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+        <input class="input list-search__input" type="search" name="q" placeholder="Поиск по номеру, клиенту…" value="{{ q }}">
+        <button class="btn btn-secondary" type="submit">Найти</button>
+      </form>
+    </div>
+
+    {% if rows %}
+    <div class="table-wrap inv-table-wrap">
+      <table class="tbl tbl-clickable inv-table">
+        <thead>
+          <tr>
+            <th>Номер</th>
+            <th>Клиент / объект</th>
+            <th class="inv-col-date">Создана</th>
+            <th class="inv-col-status">Статус</th>
+            <th class="num-col">Сумма</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in rows %}
+          <tr onclick="window.location='/estimates/{{ inv.id }}'">
+            <td>
+              <span class="mono">{{ inv.invoice_number }}</span>
+              {% if inv.created_via == "bot" %}
+              <span class="chip" title="Создана через Telegram-бота">tg</span>
+              {% endif %}
+              <div class="inv-mobile-meta">
+                <span class="status-pill is-{{ inv.status }}">{{ inv.status | status_label }}</span>
+                <span>{{ inv.created_at | relative }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="item-name">{{ inv.client_name or "—" }}</div>
+              <div class="item-sub">{{ inv.object_name or "Без объекта" }}</div>
+            </td>
+            <td class="inv-col-date">{{ inv.created_at | date_short }}<br><span class="text-2xs muted">{{ inv.created_at | relative }}</span></td>
+            <td class="inv-col-status"><span class="status-pill is-{{ inv.status }}">{{ inv.status | status_label }}</span></td>
+            <td class="num-col">{{ inv.total_amount | money }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if has_prev or has_next %}
+    {% set page_url = "?scope=" ~ scope ~ ("&status=" ~ status if status else "") ~ ("&q=" ~ q if q else "") %}
+    <div class="flex justify-between mt-6">
+      {% if has_prev %}
+      <a href="{{ page_url }}&page={{ page - 1 }}" class="btn btn-ghost">← Предыдущая</a>
+      {% else %}<span></span>{% endif %}
+      <span class="muted text-sm">Страница {{ page }}</span>
+      {% if has_next %}
+      <a href="{{ page_url }}&page={{ page + 1 }}" class="btn btn-ghost">Следующая →</a>
+      {% else %}<span></span>{% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty">
+      <p class="empty__title">{% if q or status %}Ничего не нашлось.{% else %}Здесь будут сметы, как только вы создадите первую.{% endif %}</p>
+      {% if q or status %}
+      <p>Попробуйте сбросить фильтры.</p>
+      <p class="mt-6"><a href="/estimates" class="btn btn-secondary">Сбросить</a></p>
+      {% else %}
+      <p class="mt-6"><a href="/estimates/new" class="btn btn-primary">Создать смету</a></p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

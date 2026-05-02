@@ -28,13 +28,26 @@ class PriceEstimator:
         session: AsyncSession,
         new_items: list[ParsedItem],
         project_context: str = "",
+        progress_cb=None,
     ) -> list[EstimationResult]:
         if not new_items:
             return []
+
+        async def _emit(stage: str, current: int = 0, total: int = 0, label: str = "") -> None:
+            if progress_cb is None:
+                return
+            try:
+                await progress_cb(stage=stage, current=current, total=total, label=label)
+            except Exception:  # noqa: BLE001
+                logger.debug("progress_cb failed (ignoring)")
+
+        await _emit("loading_index")
         await self.retriever.load_index(session)
 
         items_with_refs: list[tuple[int, ParsedItem, list[tuple[Any, float]]]] = []
+        total_n = len(new_items)
         for idx, item in enumerate(new_items):
+            await _emit("finding_refs", current=idx + 1, total=total_n, label=item.suggested_name or item.original_text[:80])
             q = f"{item.suggested_name} {item.suggested_description}".strip()
             refs = await self.retriever.find_similar(session, q, top_k=config.TOP_K_REFERENCES)
             items_with_refs.append((idx, item, refs))
@@ -53,6 +66,10 @@ class PriceEstimator:
                         "project": ref.project.project_name if ref.project else "",
                         "name": ref.name,
                         "description": ref.description[:500],
+                        "material": ref.material,
+                        "coating": ref.coating,
+                        "size_text": ref.size_text,
+                        "mounting": ref.mounting,
                         "unit": ref.unit,
                         "unit_price": float(ref.unit_price),
                         "total_price": float(ref.total_price),
@@ -83,6 +100,7 @@ class PriceEstimator:
         if not config.ANTHROPIC_API_KEY:
             return self.fallback_manual(new_items)
 
+        await _emit("llm", total=total_n)
         try:
             data = await self.llm.complete_json(
                 ESTIMATION_SYSTEM_PROMPT,
@@ -129,10 +147,7 @@ class PriceEstimator:
 
     @staticmethod
     def fallback_manual(new_items: list[ParsedItem]) -> list[EstimationResult]:
-        """Публичная обёртка: все позиции в ручную оценку (нет LLM / ошибка)."""
-        return PriceEstimator()._fallback_manual(new_items)
-
-    def _fallback_manual(self, new_items: list[ParsedItem]) -> list[EstimationResult]:
+        """Все позиции в ручную оценку (нет LLM или ошибка)."""
         return [
             EstimationResult(
                 item_index=i,

@@ -29,18 +29,28 @@ async def next_invoice_number(session: AsyncSession) -> str:
 async def create_draft_invoice(
     session: AsyncSession,
     *,
-    telegram_user_id: int,
-    telegram_username: str | None,
+    telegram_user_id: int | None = None,
+    telegram_username: str | None = None,
+    user_id: int | None = None,
     source_file_name: str | None,
     source_format: str,
     items_payload: list[dict[str, Any]],
+    created_via: str | None = None,
 ) -> Invoice:
-    """items_payload: поля для InvoiceItem + sort_order опционально."""
+    """items_payload: поля для InvoiceItem + sort_order опционально.
+
+    Должен быть передан хотя бы один из: telegram_user_id (для бота) или user_id (для веба).
+    """
+    if telegram_user_id is None and user_id is None:
+        raise ValueError("Нужен telegram_user_id или user_id")
+    via = created_via or ("web" if user_id is not None else "bot")
     num = await next_invoice_number(session)
     inv = Invoice(
         invoice_number=num,
         telegram_user_id=telegram_user_id,
         telegram_username=telegram_username,
+        user_id=user_id,
+        created_via=via,
         status="estimating",
         source_file_name=source_file_name,
         source_format=source_format,
@@ -260,9 +270,7 @@ async def _recalc_totals(session: AsyncSession, invoice_id: int) -> None:
 
 
 async def stats_admin(session: AsyncSession) -> dict[str, Any]:
-    from datetime import datetime as dt
-
-    now = dt.utcnow()
+    now = datetime.now(timezone.utc)
     start_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     start_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     q_today = select(func.count()).select_from(Invoice).where(Invoice.created_at >= start_today)
@@ -281,3 +289,55 @@ async def stats_admin(session: AsyncSession) -> dict[str, Any]:
 async def list_recent_invoices(session: AsyncSession, limit: int = 10) -> Sequence[Invoice]:
     r = await session.execute(select(Invoice).order_by(Invoice.created_at.desc()).limit(limit))
     return r.scalars().all()
+
+
+async def list_invoices_paginated(
+    session: AsyncSession,
+    *,
+    page: int = 1,
+    per_page: int = 50,
+    search: str | None = None,
+    user_id: int | None = None,
+    status: str | None = None,
+) -> tuple[Sequence[Invoice], int]:
+    q = select(Invoice).order_by(Invoice.created_at.desc())
+    count_q = select(func.count()).select_from(Invoice)
+    if search:
+        like = f"%{search.strip()}%"
+        cond = (
+            Invoice.invoice_number.ilike(like)
+            | Invoice.client_name.ilike(like)
+            | Invoice.object_name.ilike(like)
+            | Invoice.contact_name.ilike(like)
+        )
+        q = q.where(cond)
+        count_q = count_q.where(cond)
+    if user_id is not None:
+        q = q.where(Invoice.user_id == user_id)
+        count_q = count_q.where(Invoice.user_id == user_id)
+    if status:
+        q = q.where(Invoice.status == status)
+        count_q = count_q.where(Invoice.status == status)
+    q = q.limit(per_page).offset((page - 1) * per_page)
+    rows = (await session.execute(q)).scalars().all()
+    total = int((await session.execute(count_q)).scalar_one() or 0)
+    return rows, total
+
+
+async def stats_for_user(session: AsyncSession, user_id: int) -> dict[str, Any]:
+    now = datetime.now(timezone.utc)
+    start_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    q_month = select(func.count()).select_from(Invoice).where(
+        Invoice.user_id == user_id, Invoice.created_at >= start_month
+    )
+    q_total = select(func.count()).select_from(Invoice).where(Invoice.user_id == user_id)
+    q_review = (
+        select(func.count())
+        .select_from(Invoice)
+        .where(Invoice.user_id == user_id, Invoice.status.in_(("estimating", "draft")))
+    )
+    return {
+        "month": int((await session.execute(q_month)).scalar_one() or 0),
+        "total": int((await session.execute(q_total)).scalar_one() or 0),
+        "in_progress": int((await session.execute(q_review)).scalar_one() or 0),
+    }

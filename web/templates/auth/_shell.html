@@ -1,0 +1,32 @@
+{# Двухколоночная обёртка для страниц аутентификации.
+   Слева — редакционный hero, справа — компактная форма.
+   На узких экранах сворачивается в одну колонку с уменьшенным hero. #}
+{% extends "base.html" %}
+
+{% block header %}
+<header class="auth-shell__topbar">
+  <a href="/login" class="app-header__brand no-underline">
+    <span class="app-header__brand-mark" aria-hidden="true">В</span>
+    <span>Смета</span>
+  </a>
+  <div class="app-header__actions">
+    {% include "_components/theme_toggle.html" %}
+  </div>
+</header>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+  <section class="auth-shell__hero">
+    {% block hero %}{% endblock %}
+  </section>
+
+  <section class="auth-shell__form">
+    <div class="auth-card">
+      {% block form %}{% endblock %}
+    </div>
+  </section>
+</div>
+{% endblock %}

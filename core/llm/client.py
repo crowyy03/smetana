@@ -41,6 +41,7 @@ class LLMClient:
         self.client = anthropic.AsyncAnthropic(
             api_key=config.ANTHROPIC_API_KEY or "dummy",
             base_url=config.ANTHROPIC_BASE_URL or None,
+            timeout=60.0,
         )
         self.primary_model = config.PRIMARY_MODEL
         self.fallback_model = config.FALLBACK_MODEL

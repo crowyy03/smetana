@@ -84,6 +84,23 @@ class ReferenceItem(Base):
     project: Mapped["ReferenceProject"] = relationship(back_populates="items")
 
 
+class User(Base):
+    """Пользователь веб-интерфейса."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(255), default="")
+    role: Mapped[str] = mapped_column(String(32), default="estimator")
+    telegram_user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, index=True)
+    theme_pref: Mapped[str] = mapped_column(String(16), default="system")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class Invoice(Base):
     """Сгенерированная смета."""
 
@@ -103,8 +120,10 @@ class Invoice(Base):
     total_section2: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=Decimal("0"))
     total_amount: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=Decimal("0"))
 
-    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    telegram_user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, index=True)
     telegram_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    created_via: Mapped[str] = mapped_column(String(16), default="bot")
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

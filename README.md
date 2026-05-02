@@ -1,6 +1,11 @@
-# Smeta Bot v2 (ВИЛИНС)
+# Smeta v2 (ВИЛИНС)
 
-Telegram-бот: входящие **xlsx / pdf / docx / текст** → разбор → **цены только из базы исторических КП** (эмбеддинги + top‑K + Claude). Фиксированного прайс-листа нет. После выдачи PDF подтверждённые позиции **автоматически** попадают в прецеденты (`ReferenceItem`).
+Два канала, общий core:
+
+- **Telegram-бот** — `python main.py`
+- **Веб-интерфейс** — `python -m uvicorn web.main:app` (полная замена бота с ЛК)
+
+Входящие **xlsx / pdf / docx / текст** → разбор → **цены только из базы исторических КП** (эмбеддинги + top-K + Claude). Фиксированного прайс-листа нет. После выдачи PDF подтверждённые позиции **автоматически** попадают в прецеденты (`ReferenceItem`).
 
 ## Требования
 
@@ -49,9 +54,38 @@ python scripts/rebuild_embeddings.py
 
 ## Запуск
 
+### Telegram-бот
+
 ```bash
 python main.py
 ```
+
+### Веб-интерфейс
+
+При первой установке (или при обновлении схемы):
+
+```bash
+python scripts/db_migrate.py        # создать таблицу users, мигрировать invoices
+python scripts/create_admin.py       # интерактивно создать админа
+```
+
+Старт dev-сервера:
+
+```bash
+python -m uvicorn web.main:app --host 127.0.0.1 --port 8000 --reload
+# или
+python -m web.main
+```
+
+Открыть `http://127.0.0.1:8000/login`.
+
+Архитектура: FastAPI + Jinja2 + htmx + Alpine.js + vanilla CSS (без билд-степа). Ноль JS-сборки, ноль Tailwind CLI — стили задаются OKLCH-токенами, темы переключаются через View Transitions API («shadow-loom»).
+
+Дизайн-система зафиксирована в [DESIGN.md](DESIGN.md), стратегия — в [PRODUCT.md](PRODUCT.md). Любые правки UI должны сначала проходить через них.
+
+#### Production (sketch)
+
+`uvicorn` за nginx reverse-proxy с TLS, WEB_SECRET_KEY из `openssl rand -hex 32`. Cookie `secure=True` включается там же — поправить в `web/routes/auth.py`. systemd-юнит для `web/main.py` рядом с юнитом бота.
 
 ## Smoke-проверки
 

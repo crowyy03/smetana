@@ -1,0 +1,52 @@
+{% extends "auth/_shell.html" %}
+{% block title %}Вход · VILINS Smeta{% endblock %}
+
+{% block hero %}
+<p class="eyebrow">Внутренний инструмент сметчиков</p>
+<div class="entrance-display">
+  <h1 class="display">Каждая смета —</h1>
+  <h1 class="display">точная, обоснованная,</h1>
+  <h1 class="display muted">за минуты.</h1>
+</div>
+<p class="lede">Загрузите запрос. Система найдёт похожие позиции в базе исторических КП, предложит цены с обоснованием и соберёт PDF.</p>
+<div class="auth-shell__hero-meta">
+  <p>
+    <strong>База прецедентов</strong>
+    каждая подтверждённая смета пополняет её автоматически
+  </p>
+  <p>
+    <strong>Прозрачность</strong>
+    у каждой цены есть ссылка на конкретный исторический случай
+  </p>
+</div>
+{% endblock %}
+
+{% block form %}
+<h2>Вход</h2>
+<p class="auth-card__sub">{% if next and next != "/" %}Войдите, чтобы продолжить.{% else %}Учётная запись с тем e-mail, который указан вашим админом.{% endif %}</p>
+
+<form method="post" action="/login" class="form-stack">
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+  <div class="field">
+    <label class="field-label" for="email">E-mail</label>
+    <input class="input" type="email" id="email" name="email" autocomplete="username"
+           value="{{ email or '' }}" required autofocus>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="password">Пароль</label>
+    <input class="input" type="password" id="password" name="password" autocomplete="current-password" required>
+  </div>
+
+  {% if error %}
+  <p class="field-error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <button class="btn btn-primary btn-lg btn-block" type="submit">Войти</button>
+</form>
+
+<p class="auth-card__divider">
+  Нет учётной записи? <a href="/register">Зарегистрироваться</a>
+</p>
+{% endblock %}

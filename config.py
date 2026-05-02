@@ -42,6 +42,12 @@ class Config(BaseSettings):
     EXECUTOR_NAME: str = Field(default="Алексей")
     EXECUTOR_PHONE: str = Field(default="8 999 916 04 24")
 
+    # Web
+    WEB_SECRET_KEY: str = Field(default="change-me-in-production-please")
+    WEB_SESSION_MAX_AGE: int = Field(default=60 * 60 * 24 * 14)  # 14 дней
+    WEB_HOST: str = Field(default="127.0.0.1")
+    WEB_PORT: int = Field(default=8000)
+
     @field_validator("ADMIN_IDS", mode="before")
     @classmethod
     def strip_admin_ids(cls, v: str | list[int] | int) -> str:

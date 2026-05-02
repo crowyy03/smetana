@@ -4,19 +4,26 @@ from __future__ import annotations
 
 from typing import Any
 
+from core.reference_db.synonyms import expand_synonyms
+
 
 def build_search_text_from_row(row: dict[str, Any]) -> str:
+    name = str(row.get("name", ""))
+    desc = str(row.get("description", ""))[:300]
     parts = [
-        str(row.get("name", "")),
-        str(row.get("description", "")),
-        str(row.get("material") or ""),
-        str(row.get("coating") or ""),
-        str(row.get("size_text") or ""),
-        str(row.get("mounting") or ""),
+        name,
+        name,  # умножаем вес продуктового названия
         str(row.get("category", "")),
+        str(row.get("size_text") or ""),
+        desc,
+        str(row.get("material") or "")[:80],
+        str(row.get("coating") or "")[:60],
+        str(row.get("mounting") or "")[:60],
     ]
-    return " ".join(p for p in parts if p).strip().lower()
+    base = " ".join(p for p in parts if p).strip().lower()
+    return expand_synonyms(base)
 
 
 def build_search_text_from_invoice_item(name: str, description: str) -> str:
-    return f"{name} {description}".strip().lower()
+    base = f"{name} {name} {description}".strip().lower()
+    return expand_synonyms(base)

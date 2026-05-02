@@ -27,8 +27,12 @@ async def main_async(*, force: bool, only: str | None) -> None:
     exts = {".pdf", ".xlsx", ".docx"}
     files = sorted([p for p in kp_dir.iterdir() if p.is_file() and p.suffix.lower() in exts])
     if only:
-        stem = only.replace(".pdf", "").replace(".xlsx", "").replace(".docx", "")
-        files = [p for p in files if stem in (p.stem, p.name)]
+        needle = only
+        for ext in (".pdf", ".xlsx", ".docx"):
+            if needle.endswith(ext):
+                needle = needle[: -len(ext)]
+                break
+        files = [p for p in files if needle in p.name]
     if not files:
         logger.warning("Нет файлов в {}", kp_dir)
         return

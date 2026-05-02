@@ -114,7 +114,7 @@ async def on_document(message: Message, state: FSMContext, bot: Bot) -> None:
     if notes:
         await message.answer(f"⚠️ Замечания парсера:\n{notes}")
 
-    await message.answer(f"✅ Нашёл **{len(parse_result.items)}** позиций. Подбираю цены по прецедентам...")
+    await message.answer(f"✅ Нашёл {len(parse_result.items)} позиций. Подбираю цены по прецедентам...")
 
     meta = parse_result.project_metadata or {}
     ctx = json.dumps(meta, ensure_ascii=False) if meta else ""
@@ -153,7 +153,11 @@ async def on_text(message: Message, state: FSMContext) -> None:
     await message.answer("⏳ Разбираю текст...")
     parse_result = await TextParser().parse(message.text or "")
     if not parse_result.items:
-        await message.answer("❌ Не извлёк позиции из текста.")
+        notes = "\n".join(parse_result.parser_notes) if parse_result.parser_notes else ""
+        msg = "❌ Не извлёк позиции из текста."
+        if notes:
+            msg += f"\n\nПричина: {notes}"
+        await message.answer(msg)
         await state.set_state(EstimationStates.waiting_for_input)
         return
 

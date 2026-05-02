@@ -1,0 +1,66 @@
+{% extends "auth/_shell.html" %}
+{% block title %}Регистрация · VILINS Smeta{% endblock %}
+
+{% block hero %}
+<p class="eyebrow">Регистрация сметчика</p>
+<div class="entrance-display">
+  <h1 class="display">Создайте</h1>
+  <h1 class="display">учётную запись —</h1>
+  <h1 class="display muted">и сразу к делу.</h1>
+</div>
+<p class="lede">Учётка даёт вам личный кабинет, историю смет и доступ к общей базе прецедентов компании.</p>
+<div class="auth-shell__hero-meta">
+  <p>
+    <strong>Что даёт регистрация</strong>
+    свой список смет, автоматическое обоснование цен, скачивание PDF
+  </p>
+  <p>
+    <strong>Привязка к Telegram-боту</strong>
+    можно настроить позже в личном кабинете
+  </p>
+</div>
+{% endblock %}
+
+{% block form %}
+<h2>Регистрация</h2>
+<p class="auth-card__sub">Внутренний инструмент. Используйте корпоративный e-mail.</p>
+
+<form method="post" action="/register" class="form-stack">
+  <div class="field">
+    <label class="field-label" for="full_name">Имя</label>
+    <input class="input" type="text" id="full_name" name="full_name"
+           value="{{ values.full_name or '' }}" required autofocus>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="email">E-mail</label>
+    <input class="input" type="email" id="email" name="email" autocomplete="email"
+           value="{{ values.email or '' }}" required>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label class="field-label" for="password">Пароль</label>
+      <input class="input" type="password" id="password" name="password"
+             autocomplete="new-password" minlength="8" required>
+    </div>
+    <div class="field">
+      <label class="field-label" for="confirm_password">Ещё раз</label>
+      <input class="input" type="password" id="confirm_password" name="confirm_password"
+             autocomplete="new-password" minlength="8" required>
+    </div>
+  </div>
+
+  {% if error %}
+  <p class="field-error" role="alert">{{ error }}</p>
+  {% else %}
+  <p class="field-hint">Минимум 8 символов.</p>
+  {% endif %}
+
+  <button class="btn btn-primary btn-lg btn-block" type="submit">Создать аккаунт</button>
+</form>
+
+<p class="auth-card__divider">
+  Уже есть учётная запись? <a href="/login">Войти</a>
+</p>
+{% endblock %}

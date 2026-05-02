@@ -1,0 +1,80 @@
+{% set theme = initial_theme(request) %}
+{% set effective_theme = theme if theme in ("day", "night") else "" %}
+<!doctype html>
+<html lang="ru"{% if effective_theme %} data-theme="{{ effective_theme }}"{% endif %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block title %}VILINS Smeta{% endblock %}</title>
+
+  {# FOUC-guard: применяем тему синхронно из localStorage до загрузки CSS. #}
+  <script>
+    (function () {
+      try {
+        var v = localStorage.getItem("vilins-theme");
+        var sys = window.matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day";
+        var eff = (v === "day" || v === "night") ? v : sys;
+        document.documentElement.setAttribute("data-theme", eff);
+      } catch (e) { /* swallow */ }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/animations.css">
+  <link rel="stylesheet" href="/static/css/utilities.css">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23223348'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-size='18' fill='white'%3EВ%3C/text%3E%3C/svg%3E">
+
+  <script defer src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <script defer src="https://unpkg.com/htmx.org@2.0.4/dist/ext/sse.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.6/dist/cdn.min.js"></script>
+  <script defer src="/static/js/theme.js"></script>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main">К содержимому</a>
+  <div class="app-shell">
+    {% block header %}{% include "_components/header.html" %}{% endblock %}
+
+    <main class="app-main" id="main" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}
+    <footer class="app-footer">
+      <div class="app-footer__inner">
+        <span>ВИЛИНС · внутренний инструмент сметчиков</span>
+        <span class="num">v 2.0</span>
+      </div>
+    </footer>
+    {% endblock %}
+  </div>
+
+  {% block scripts %}{% endblock %}
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+  <script>
+    // Простой listener на HX-Trigger 'vilins:toast': {kind, message}.
+    (function () {
+      const stack = document.getElementById("toast-stack");
+      function show({ kind = "success", message = "" }) {
+        const el = document.createElement("div");
+        el.className = "toast " + (kind === "error" ? "toast-error" : "toast-success");
+        el.role = "status";
+        el.textContent = message;
+        stack.appendChild(el);
+        setTimeout(() => {
+          el.style.transition = "opacity 240ms";
+          el.style.opacity = "0";
+          setTimeout(() => el.remove(), 280);
+        }, 2400);
+      }
+      document.body.addEventListener("vilins:toast", (e) => show(e.detail || {}));
+    })();
+  </script>
+</body>
+</html>

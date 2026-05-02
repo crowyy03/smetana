@@ -1,0 +1,80 @@
+{# Одна строка построчного подтверждения. Используется и в _table.html, и как hx-swap=outerHTML. #}
+{% set conf_marker = confidence_marker(item.confidence, item.estimation_method) %}
+<form data-confirm-form
+      id="row-{{ item.id }}"
+      hx-post="/estimates/{{ inv.id }}/items/{{ item.id }}/confirm"
+      hx-swap="outerHTML"
+      hx-target="this"
+      hx-indicator="closest [data-confirm-form] .row-line__confirm-btn"
+      class="row-line"
+      data-row-id="{{ item.id }}"
+      data-confirmed="{{ 'true' if item.was_confirmed else 'false' }}"
+      data-method="{{ item.estimation_method }}"
+      data-active="false">
+  <div class="row-line__main">
+    <p class="row-line__title">
+      {{ item.name or item.original_text or 'Без названия' }}
+    </p>
+    {% if item.description %}
+    <p class="row-line__rationale">{{ item.description }}</p>
+    {% endif %}
+    {% if refs %}
+    <p class="row-line__rationale mt-2">
+      <span class="muted">Основано на:</span>
+      {% for ref in refs[:3] %}
+        <span class="chip"
+              title="{{ ref.project.project_name if ref.project else '' }} — {{ ref.unit_price | money }}">
+          {{ ref.project.project_name if ref.project else 'kp' }}
+        </span>
+      {% endfor %}
+      {% if item.estimation_reasoning %}
+      <span class="muted" style="display:block; margin-top: 4px;">— {{ item.estimation_reasoning }}</span>
+      {% endif %}
+    </p>
+    {% elif item.estimation_method == "needs_manual" %}
+    <p class="row-line__rationale mt-2 muted" style="font-style: italic;">
+      Похожих прецедентов не нашлось — требуется ручная оценка.
+    </p>
+    {% elif item.estimation_reasoning %}
+    <p class="row-line__rationale mt-2 muted">{{ item.estimation_reasoning }}</p>
+    {% endif %}
+  </div>
+
+  <div class="row-line__price">
+    <input type="number" step="0.01" min="0"
+           class="input input-num row-line__price-input"
+           name="unit_price"
+           value="{{ '%.2f' | format(item.unit_price) if item.unit_price else '' }}"
+           data-price-input
+           {% if item.estimation_method == 'needs_manual' and not item.was_confirmed %}placeholder="—"{% endif %}>
+    <input type="hidden" name="quantity" value="{{ item.quantity }}">
+    <div class="row-line__price-meta">
+      {% if conf_marker %}<span class="row-line__confidence-mark" title="Проверьте — средняя уверенность">{{ conf_marker }}</span>{% endif %}
+      <span>× {{ item.quantity | qty }} {{ item.unit }}</span>
+    </div>
+  </div>
+
+  <div class="row-line__actions">
+    {% if item.was_confirmed %}
+    <button type="button" class="btn btn-ghost btn-sm row-line__confirm-btn"
+            hx-post="/estimates/{{ inv.id }}/items/{{ item.id }}/unconfirm"
+            hx-swap="outerHTML"
+            hx-target="closest form">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      Подтверждено
+    </button>
+    <span class="text-2xs muted">{{ item.total_price | money }}</span>
+    {% else %}
+    <button type="submit" class="btn btn-secondary btn-sm row-line__confirm-btn">
+      Подтвердить
+    </button>
+    {% if item.estimation_method == "auto_high" %}
+    <span class="text-2xs muted">{{ item.total_price | money }}</span>
+    {% elif item.estimation_method == "auto_medium" %}
+    <span class="text-2xs muted">проверьте · {{ item.total_price | money }}</span>
+    {% endif %}
+    {% endif %}
+  </div>
+</form>

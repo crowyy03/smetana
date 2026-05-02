@@ -47,6 +47,11 @@ async def show_position_card(target: Message | CallbackQuery, state: FSMContext,
         "",
         f"📦 Количество: {item.quantity} {item.unit}",
     ]
+    try:
+        ref_ids = json.loads(item.reference_item_ids or "[]")
+    except json.JSONDecodeError:
+        ref_ids = []
+
     if item.estimation_method != "needs_manual":
         text_lines += [
             "",
@@ -55,10 +60,6 @@ async def show_position_card(target: Message | CallbackQuery, state: FSMContext,
             "",
             "🔍 На основе:",
         ]
-        try:
-            ref_ids = json.loads(item.reference_item_ids or "[]")
-        except json.JSONDecodeError:
-            ref_ids = []
         async with AsyncSessionLocal() as session:
             refs = await get_reference_items_by_ids(session, ref_ids[:3])
         for ref in refs:
@@ -67,7 +68,17 @@ async def show_position_card(target: Message | CallbackQuery, state: FSMContext,
         if item.estimation_reasoning:
             text_lines += ["", f"💡 {item.estimation_reasoning}"]
     else:
-        text_lines += ["", "⚠️ Нет уверенных аналогов в истории. Введи цену вручную."]
+        text_lines += ["", "⚠️ Уверенного аналога нет — введи цену вручную."]
+        if ref_ids:
+            async with AsyncSessionLocal() as session:
+                refs = await get_reference_items_by_ids(session, ref_ids[:3])
+            if refs:
+                text_lines += ["", "🔍 Что нашёл из похожего:"]
+                for ref in refs:
+                    pname = ref.project.project_name if ref.project else ""
+                    text_lines.append(f"• {pname} — {ref.name}: {fmt_money(ref.unit_price)}/{ref.unit}")
+        if item.estimation_reasoning:
+            text_lines += ["", f"💡 {item.estimation_reasoning}"]
 
     text = "\n".join(text_lines)
     kb = build_position_keyboard(item, idx, len(items), all_ok)

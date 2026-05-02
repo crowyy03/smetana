@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Новая смета · VILINS Smeta{% endblock %}
+
+{% block content %}
+<section class="editorial">
+  <p class="eyebrow mb-3">Создание сметы</p>
+  <div class="entrance-display mb-10">
+    <h1 class="display display-4xl">Загрузите запрос —</h1>
+    <h1 class="display display-4xl muted">мы найдём цены.</h1>
+  </div>
+
+  {% if error %}
+  <div class="toast toast-error" role="alert" style="position: static; margin-bottom: var(--space-6);">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="post" action="/estimates/new" enctype="multipart/form-data" class="form-stack" data-upload-form>
+    <div class="dropzone" data-dropzone tabindex="0" role="button" aria-label="Перетащите файл или нажмите для выбора">
+      <p class="dropzone__title">Перетащите файл сюда</p>
+      <p class="dropzone__hint">
+        или <button type="button" class="btn-link" onclick="this.closest('.dropzone').querySelector('input').click()">выберите вручную</button>
+      </p>
+      <p class="muted text-xs mt-4">Поддерживаются: <span class="mono">.xlsx</span> · <span class="mono">.pdf</span> · <span class="mono">.docx</span></p>
+      <input type="file" name="file" accept=".xlsx,.pdf,.docx">
+    </div>
+
+    <div class="flex items-center gap-4">
+      <hr class="flex-1" style="border: 0; border-top: 1px solid var(--line-default);">
+      <span class="eyebrow">или</span>
+      <hr class="flex-1" style="border: 0; border-top: 1px solid var(--line-default);">
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="text">Вставьте текст запроса</label>
+      <textarea class="textarea" id="text" name="text" rows="8"
+                placeholder="Например: Нужна смета на номера квартир для ЖК «Заря» — 120 квартир, латунь, размер 200×80..."></textarea>
+      <p class="field-hint">LLM разберёт текст и предложит цены по прецедентам.</p>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-primary btn-lg">Начать оценку →</button>
+      <a href="/estimates" class="btn btn-ghost">Отмена</a>
+    </div>
+  </form>
+</section>
+
+<script src="/static/js/upload.js" defer></script>
+{% endblock %}

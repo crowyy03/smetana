@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет · VILINS Smeta{% endblock %}
+
+{% block content %}
+<section class="editorial" style="max-width: var(--content-narrow);">
+  <p class="eyebrow mb-3">Личный кабинет</p>
+  <h1 class="display display-4xl mb-12">{{ user.full_name or user.email }}</h1>
+
+  {% if flash %}
+  <div class="toast toast-success" role="status" style="position: static; margin-bottom: var(--space-8);">
+    {{ flash }}
+  </div>
+  {% endif %}
+  {% if error %}
+  <div class="toast toast-error" role="alert" style="position: static; margin-bottom: var(--space-8);">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="stats-line mb-16">
+    <div>
+      <div class="stat__value">{{ stats.total }}</div>
+      <div class="stat__label">всего сметы</div>
+    </div>
+    <div>
+      <div class="stat__value">{{ stats.month }}</div>
+      <div class="stat__label">в этом месяце</div>
+    </div>
+    <div>
+      <div class="stat__value">{{ stats.in_progress }}</div>
+      <div class="stat__label">в работе</div>
+    </div>
+  </div>
+
+  <h2 class="eyebrow mb-4">Профиль</h2>
+  <form method="post" action="/profile" class="form-stack mb-16">
+    <div class="field">
+      <label class="field-label" for="email">E-mail</label>
+      <input class="input" type="email" id="email" value="{{ user.email }}" disabled>
+      <p class="field-hint">Сменить e-mail может администратор.</p>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="full_name">Имя</label>
+      <input class="input" type="text" id="full_name" name="full_name" value="{{ user.full_name }}">
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="telegram_user_id">Telegram ID (для связки с ботом)</label>
+      <input class="input" type="text" id="telegram_user_id" name="telegram_user_id"
+             value="{{ user.telegram_user_id or '' }}" placeholder="например 123456789">
+      <p class="field-hint">Опционально. Если бот указан — там сметы тоже будут видны в этом кабинете.</p>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="theme_pref">Тема по умолчанию</label>
+      <select class="select" id="theme_pref" name="theme_pref">
+        <option value="system" {% if user.theme_pref == 'system' %}selected{% endif %}>Как в системе</option>
+        <option value="day" {% if user.theme_pref == 'day' %}selected{% endif %}>День</option>
+        <option value="night" {% if user.theme_pref == 'night' %}selected{% endif %}>Ночь</option>
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-primary">Сохранить</button>
+    </div>
+  </form>
+
+  <h2 class="eyebrow mb-4">Пароль</h2>
+  <form method="post" action="/profile/password" class="form-stack">
+    <div class="field">
+      <label class="field-label" for="current_password">Текущий пароль</label>
+      <input class="input" type="password" id="current_password" name="current_password" autocomplete="current-password" required>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label" for="new_password">Новый пароль</label>
+        <input class="input" type="password" id="new_password" name="new_password" autocomplete="new-password" required minlength="8">
+      </div>
+      <div class="field">
+        <label class="field-label" for="confirm_password">Ещё раз</label>
+        <input class="input" type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required minlength="8">
+      </div>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-secondary">Сменить пароль</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

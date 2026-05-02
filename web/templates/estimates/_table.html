@@ -1,0 +1,96 @@
+{# Часть страницы сметы: progress + список строк + итог. Свапается из bulk-confirm-auto. #}
+{% set unconfirmed_medium = items | rejectattr("was_confirmed") | selectattr("estimation_method", "equalto", "auto_medium") | list %}
+{% set unconfirmed_manual = items | rejectattr("was_confirmed") | selectattr("estimation_method", "equalto", "needs_manual") | list %}
+{% set need_review = (unconfirmed_medium | length) + (unconfirmed_manual | length) %}
+<div id="estimate-table">
+  {% if need_review and inv.status != "generated" %}
+  <div class="review-banner mb-6" role="status">
+    <div class="review-banner__num">{{ need_review }}</div>
+    <div class="review-banner__body">
+      <p class="review-banner__title">
+        {% if need_review == 1 %}1 позиция требует проверки.{% else %}{{ need_review }} позиции требуют проверки.{% endif %}
+      </p>
+      <p class="review-banner__sub">
+        {% if unconfirmed_medium %}{{ unconfirmed_medium | length }} со средней уверенностью LLM{% endif %}{% if unconfirmed_medium and unconfirmed_manual %}, {% endif %}{% if unconfirmed_manual %}{{ unconfirmed_manual | length }} нужно ввести руками{% endif %}.
+        Итог ниже — <strong>предварительный</strong>, пока вы их не подтвердите. Бот делал то же предложение в Telegram —
+        вы тогда сами правили эти строки.
+      </p>
+      {% if unconfirmed_medium %}
+      <p class="review-banner__items">
+        {% for it in unconfirmed_medium[:5] %}
+          <a href="#row-{{ it.id }}" class="chip">{{ it.name | truncate(40, True, '…') }}</a>
+        {% endfor %}
+        {% if unconfirmed_medium | length > 5 %}<span class="chip">+{{ (unconfirmed_medium | length) - 5 }}</span>{% endif %}
+      </p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="flex items-baseline justify-between mb-4 flex-wrap gap-4">
+    <div class="flex items-baseline gap-6">
+      <p class="text-sm muted"><span data-progress-counter>{{ confirmed_count }} из {{ total_count }}</span> подтверждено</p>
+      {% if confirmed_count < total_count %}
+      <button class="btn btn-secondary btn-sm" data-bulk-confirm
+              hx-post="/estimates/{{ inv.id }}/bulk-confirm-auto"
+              hx-target="#estimate-table" hx-swap="outerHTML"
+              title="Подтвердить все позиции с высокой уверенностью (Cmd/Ctrl+Enter)">
+        Подтвердить auto
+      </button>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-2 finalize-actions">
+      {% if inv.status == "generated" %}
+      <a href="/estimates/{{ inv.id }}/pdf" class="btn btn-secondary" target="_blank" rel="noopener">Открыть PDF</a>
+      <a href="/estimates/{{ inv.id }}/pdf?download=1" class="btn btn-primary">Скачать</a>
+      {% else %}
+      <form method="post" action="/estimates/{{ inv.id }}/finalize" data-finalize-form>
+        <button class="btn btn-primary" data-finish-btn
+                {% if confirmed_count != total_count %}disabled{% endif %}>
+          <span data-finish-label>Сгенерировать PDF →</span>
+          <span data-finish-busy hidden>Готовлю PDF…</span>
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="progress-bar mb-8">
+    <span class="progress-bar__fill" data-progress-fill style="width: {{ progress_pct }}%"></span>
+  </div>
+
+  {% set sec1_items = items | selectattr("section", "equalto", 1) | list %}
+  {% set sec2_items = items | selectattr("section", "equalto", 2) | list %}
+
+  {% if sec1_items %}
+  <h2 class="eyebrow mt-10 mb-3">Раздел 1</h2>
+  <div class="table-wrap" style="overflow: visible;">
+    {% for item in sec1_items %}
+    {% include "estimates/_row.html" with context %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if sec2_items %}
+  <h2 class="eyebrow mt-10 mb-3">Раздел 2 — доставка / монтаж</h2>
+  <div class="table-wrap" style="overflow: visible;">
+    {% for item in sec2_items %}
+    {% include "estimates/_row.html" with context %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="flex items-center justify-between mt-10 pt-6" style="border-top: 1px solid var(--line-default);">
+    <span class="eyebrow">{% if need_review and inv.status != "generated" %}Итог · предварительный{% else %}Итог{% endif %}</span>
+    <div class="text-right">
+      {% if inv.total_section1 and sec2_items %}
+      <p class="text-sm muted">Раздел 1: <span class="mono">{{ inv.total_section1 | money }}</span></p>
+      <p class="text-sm muted">Раздел 2: <span class="mono">{{ inv.total_section2 | money }}</span></p>
+      {% endif %}
+      <p class="display display-3xl mt-2 mono" style="font-family: var(--font-display); font-variant-numeric: tabular-nums;">{{ inv.total_amount | money }}</p>
+      {% if need_review and inv.status != "generated" %}
+      <p class="text-xs muted mt-2">подтвердите позиции выше — итог пересчитается</p>
+      {% endif %}
+    </div>
+  </div>
+</div>

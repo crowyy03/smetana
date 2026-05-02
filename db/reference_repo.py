@@ -2,9 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
+from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import Any, Sequence
+
+
+def _to_dec(v: Any, default: Decimal = Decimal("0")) -> Decimal:
+    if v is None or v == "":
+        return default
+    if isinstance(v, Decimal):
+        return v
+    try:
+        return Decimal(str(v).replace(" ", "").replace(",", "."))
+    except (InvalidOperation, ValueError):
+        return default
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,9 +84,10 @@ async def create_reference_project_with_items(
 
     embs = embeddings if embeddings is not None else [None] * len(items_data)
     for row, emb in zip(items_data, embs, strict=True):
-        qty = Decimal(str(row.get("quantity", 1)))
-        up = Decimal(str(row.get("unit_price", 0)))
-        tp = Decimal(str(row.get("total_price", up * qty)))
+        qty = _to_dec(row.get("quantity"), default=Decimal("1"))
+        up = _to_dec(row.get("unit_price"), default=Decimal("0"))
+        tp_raw = row.get("total_price")
+        tp = _to_dec(tp_raw, default=up * qty) if tp_raw not in (None, "") else up * qty
         it = ReferenceItem(
             project_id=proj.id,
             name=str(row.get("name", "")),

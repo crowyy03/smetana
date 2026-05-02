@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from config import config
 from core.llm.embeddings_client import EmbeddingsClient
+from core.reference_db.synonyms import expand_synonyms
 from db.models import ReferenceItem, ReferenceProject
 
 
@@ -51,7 +52,7 @@ class ReferenceRetriever:
             return []
 
         emb_client = EmbeddingsClient()
-        q = await emb_client.create(query_text)
+        q = await emb_client.create(expand_synonyms(query_text))
         qn = np.linalg.norm(q)
         if qn > 0:
             q = q / qn

@@ -6,6 +6,21 @@ __pycache__/
 *.sqlite3
 data/*.db
 data/pricelist.xlsx
+data/reference_kp/
+data/extracted/
+data/sample_requests/
+data/uploads/
+data/pdf/
 logs/
 .DS_Store
 *.log
+
+# IDE / agent state
+.claude/
+
+# Пользовательские reference-материалы (хранятся отдельно, не в репо)
+Примеры для ИИ расчетов/
+Примеры для ИИ расчетов */
+
+# Web-runtime артефакты
+web/static/fonts/*.woff2

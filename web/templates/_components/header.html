@@ -1,0 +1,52 @@
+{% set user = current_user(request) %}
+<header class="app-header" x-data="{ menuOpen: false }">
+  <div class="app-header__inner">
+    <a href="{% if user %}/{% else %}/login{% endif %}" class="app-header__brand no-underline">
+      <span class="app-header__brand-mark" aria-hidden="true">В</span>
+      <span class="app-header__brand-text">Смета · ВИЛИНС</span>
+    </a>
+
+    {% if user %}
+    <nav class="app-header__nav app-header__nav--desktop" aria-label="Главная навигация">
+      <a href="/" {% if request.url.path == "/" %}aria-current="page"{% endif %}>Главная</a>
+      <a href="/estimates" {% if request.url.path.startswith("/estimates") %}aria-current="page"{% endif %}>Сметы</a>
+      <a href="/profile" {% if request.url.path == "/profile" %}aria-current="page"{% endif %}>Кабинет</a>
+    </nav>
+    {% endif %}
+
+    <div class="app-header__actions">
+      {% include "_components/theme_toggle.html" %}
+
+      {% if user %}
+      <form action="/logout" method="post" class="app-header__logout-desktop">
+        <button type="submit" class="btn btn-ghost btn-sm" title="Выйти">Выйти</button>
+      </form>
+
+      <button type="button" class="icon-btn app-header__burger" aria-label="Меню"
+              :aria-expanded="menuOpen ? 'true' : 'false'"
+              @click="menuOpen = !menuOpen">
+        <svg x-show="!menuOpen" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/>
+        </svg>
+        <svg x-show="menuOpen" x-cloak class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if user %}
+  <nav class="app-header__sheet"
+       :class="{ 'is-open': menuOpen }"
+       @click.outside="menuOpen = false"
+       @keyup.escape.window="menuOpen = false"
+       aria-label="Мобильная навигация">
+    <a href="/" {% if request.url.path == "/" %}aria-current="page"{% endif %} @click="menuOpen = false">Главная</a>
+    <a href="/estimates" {% if request.url.path.startswith("/estimates") %}aria-current="page"{% endif %} @click="menuOpen = false">Сметы</a>
+    <a href="/profile" {% if request.url.path == "/profile" %}aria-current="page"{% endif %} @click="menuOpen = false">Кабинет</a>
+    <hr>
+    <form action="/logout" method="post"><button type="submit">Выйти</button></form>
+  </nav>
+  {% endif %}
+</header>
