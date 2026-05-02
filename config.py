@@ -17,12 +17,14 @@ class Config(BaseSettings):
     ADMIN_IDS: str = Field(default="")
 
     ANTHROPIC_API_KEY: str = Field(default="")
-    ANTHROPIC_BASE_URL: str = Field(default="https://api.proxyapi.ru/anthropic/")
+    # Пусто = использовать дефолт SDK (api.anthropic.com).
+    # Через прокси (например ProxyAPI) — задать в .env: ANTHROPIC_BASE_URL=https://api.proxyapi.ru/anthropic/
+    ANTHROPIC_BASE_URL: str = Field(default="")
     PRIMARY_MODEL: str = Field(default="claude-sonnet-4-6")
     FALLBACK_MODEL: str = Field(default="claude-opus-4-6")
 
     OPENAI_API_KEY: str = Field(default="")
-    OPENAI_BASE_URL: str = Field(default="https://api.proxyapi.ru/openai/v1/")
+    OPENAI_BASE_URL: str = Field(default="")
     EMBEDDINGS_MODEL: str = Field(default="text-embedding-3-small")
 
     HIGH_CONFIDENCE_THRESHOLD: float = Field(default=0.85, ge=0.0, le=1.0)

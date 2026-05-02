@@ -1,14 +1,19 @@
-"""OpenAI-compatible embeddings через ProxyAPI."""
+"""OpenAI-compatible embeddings: api.openai.com по умолчанию или прокси по OPENAI_BASE_URL."""
 
 from __future__ import annotations
 
 import asyncio
+import os
 
 import numpy as np
 from loguru import logger
 from openai import AsyncOpenAI
 
 from config import config
+
+# Аналогично client.py: пустая OPENAI_BASE_URL из systemd EnvironmentFile сломает SDK.
+if "OPENAI_BASE_URL" in os.environ and not os.environ["OPENAI_BASE_URL"].strip():
+    del os.environ["OPENAI_BASE_URL"]
 
 
 class EmbeddingsClient:

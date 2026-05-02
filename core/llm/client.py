@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
 from dataclasses import dataclass
 
@@ -11,6 +12,12 @@ import anthropic
 from loguru import logger
 
 from config import config
+
+# SDK Anthropic читает ANTHROPIC_BASE_URL из os.environ когда base_url=None.
+# systemd через EnvironmentFile=.env инжектит пустую строку, и SDK берёт её как URL → connection error.
+# Удаляем переменную, если она пустая, ещё до создания клиента.
+if "ANTHROPIC_BASE_URL" in os.environ and not os.environ["ANTHROPIC_BASE_URL"].strip():
+    del os.environ["ANTHROPIC_BASE_URL"]
 
 
 class LLMParseError(Exception):
