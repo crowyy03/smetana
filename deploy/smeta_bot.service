@@ -1,0 +1,16 @@
+[Unit]
+Description=Smeta Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/smeta_bot
+ExecStart=/opt/smeta_bot/venv/bin/python main.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

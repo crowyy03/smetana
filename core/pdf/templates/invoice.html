@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="invoice.css">
+</head>
+<body>
+    <header class="company-header">
+        <div class="logo-block">
+            {% if logo_path %}
+            <img src="{{ logo_path }}" class="logo" alt="logo">
+            {% endif %}
+            <div class="company-tagline">e n g i n e e r i n g</div>
+        </div>
+        <div class="company-contacts">
+            <div>{{ company_name }}</div>
+            <div>{{ company_phone }}</div>
+            <div>{{ company_web }}</div>
+        </div>
+    </header>
+
+    <h1 class="kp-title">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ № {{ invoice_number }} от {{ date }}</h1>
+
+    <table class="deal-info">
+        <tr><td>ЗАКАЗЧИК</td><td>{{ client_name }}</td></tr>
+        <tr><td>КОНТАКТЫ</td><td>{{ contact_name }}</td></tr>
+        <tr><td>ОБЪЕКТ</td><td>{{ object_name }}</td></tr>
+        <tr><td>ИСПОЛНИТЕЛЬ</td><td>{{ company_name }}, {{ executor_line }}</td></tr>
+    </table>
+
+    <h2 class="section-title">РАЗДЕЛ 1 «ИЗГОТОВЛЕНИЕ ИЗДЕЛИЙ»</h2>
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>№ П/П</th>
+                <th>НАИМЕНОВАНИЕ / ОПИСАНИЕ ИЗДЕЛИЙ</th>
+                <th>ЕД.ИЗМ</th>
+                <th>КОЛ-ВО</th>
+                <th>ЦЕНА С НДС</th>
+                <th>СУММА С НДС</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in section1_items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="description">{{ item.description }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_price | money }}</td>
+                <td>{{ item.total_price | money }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="section-total">
+                <td colspan="5">ВСЕГО ПО РАЗДЕЛУ 1:</td>
+                <td>{{ section1_total }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <h2 class="section-title">РАЗДЕЛ 2 «ПОДРЯДНЫЕ УСЛУГИ»</h2>
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>№ П/П</th>
+                <th>ОПИСАНИЕ УСЛУГ</th>
+                <th>ЕД.ИЗМ</th>
+                <th>КОЛ-ВО</th>
+                <th>ЦЕНА</th>
+                <th>СУММА</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in section2_items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="description">{{ item.description }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_price | money }}</td>
+                <td>{{ item.total_price | money }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="section-total">
+                <td colspan="5">ВСЕГО ПО РАЗДЕЛУ 2:</td>
+                <td>{{ section2_total }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <table class="totals-table">
+        <tr><td>Раздел №1:</td><td>{{ section1_total }}</td></tr>
+        <tr><td>Раздел №2:</td><td>{{ section2_total }}</td></tr>
+        <tr class="grand-total"><td>ИТОГО СТОИМОСТЬ РАБОТ:</td><td>{{ grand_total }}</td></tr>
+    </table>
+
+    <div class="notes">
+        <p><strong>ПРИМЕЧАНИЕ!</strong></p>
+        <ol>
+            <li>Производитель оставляет за собой право вносить изменения в конструкцию изделия, не ухудшающие его потребительских свойств.</li>
+            <li>Срок разработки чертежей составляет 10 календарных дней после внесения аванса.</li>
+            <li>Срок изготовления составляет 35 календарных дней после согласования рабочего чертежа.</li>
+            <li>Условия оплаты: 75% предоплата, 25% после приёмки и подписания УПД</li>
+            <li>Сроки и суммы действительны в течение 3 дней после составления коммерческого предложения, после чего могут быть пересмотрены.</li>
+            <li>Стоимость дана с учётом НДС 20%</li>
+        </ol>
+        <p class="disclaimer">Данное коммерческое предложение является индикативным и не является публичной офертой.</p>
+    </div>
+
+    <footer class="company-footer">
+        {{ company_name }} ИНН {{ company_inn }} | КПП {{ company_kpp }} | {{ company_address }}
+    </footer>
+</body>
+</html>
