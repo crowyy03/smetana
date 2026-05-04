@@ -2,7 +2,7 @@
 
 from aiogram import Dispatcher
 
-from bot.handlers import admin, confirm, estimation, manual, start, upload
+from bot.handlers import admin, confirm, estimation, guard, manual, start, upload
 from bot.middlewares import LoggingMiddleware, ThrottleMiddleware
 
 
@@ -15,3 +15,4 @@ def setup_routers(dp: Dispatcher) -> None:
     dp.include_router(estimation.router)
     dp.include_router(manual.router)
     dp.include_router(upload.router)
+    dp.include_router(guard.router)
