@@ -42,7 +42,7 @@ class TextParser:
             data = await client.complete_json(
                 "Ты извлекаешь позиции из письма клиента.",
                 PARSE_PROMPT.format(text=text.strip()[:100_000]),
-                max_tokens=4096,
+                max_tokens=16000,
                 temperature=0,
             )
         except (LLMParseError, Exception) as e:  # noqa: BLE001

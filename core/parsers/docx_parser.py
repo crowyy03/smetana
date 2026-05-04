@@ -28,16 +28,20 @@ class DocxParser:
 
     async def parse_with_claude(self, text: str) -> ParseResult:
         client = LLMClient()
-        prompt = f"""Извлеки позиции из документа в JSON.
+        prompt = f"""Извлеки ВСЕ позиции из документа в JSON.
+Если количество в виде «27.34 м» / «3 изделия» — извлекай и число, и единицу.
+Если qty не указано — поставь 1.
+
 Формат: {{"items": [{{"original_text": "...", "suggested_name": "...", "suggested_description": "...", "quantity": число, "unit": "шт."}}]}}
-Только JSON.
+Только JSON, без markdown.
+
 ТЕКСТ:
 {text[:120_000]}"""
         try:
             data = await client.complete_json(
                 "Ты извлекаешь строки спецификации из Word.",
                 prompt,
-                max_tokens=6000,
+                max_tokens=16000,
                 temperature=0,
             )
         except (LLMParseError, Exception) as e:  # noqa: BLE001
